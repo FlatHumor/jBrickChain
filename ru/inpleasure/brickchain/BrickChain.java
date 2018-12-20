@@ -2,8 +2,10 @@ package ru.inpleasure.brickchain;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class BrickChain extends Chain
 {
@@ -32,21 +34,35 @@ public class BrickChain extends Chain
     @Override
     public List<String> getBricksFilenames() {
         Pattern brickFilePattern = Pattern.compile("\\d+?\\.brick");
-        List<String> filenames = new ArrayList<>();
         File bricksDirectory = new File(chainPath);
         File[] directoryFiles = bricksDirectory.listFiles();
         if (directoryFiles == null)
-            return filenames;
+            return new ArrayList<>();
+        List<Integer> brickNumbers = new ArrayList<>(directoryFiles.length);
         for (final File fileEntry : directoryFiles)
-            if (brickFilePattern.matcher(fileEntry.getName()).find())
-                filenames.add(fileEntry.getName());
-        
-
+        {
+            if (brickFilePattern.matcher(fileEntry.getName()).find()) {
+                String fileNumber = fileEntry.getName().split(".")[0];
+                brickNumbers.add(Integer.valueOf(fileNumber));
+            }
+        }
+        Collections.sort(brickNumbers);
+        return brickNumbers.stream()
+                .map(n -> Integer.toString(n) + ".brick")
+                .collect(Collectors.toList());
     }
 
     @Override
     public Brick getPreviousBrick() {
+        List<String> bricksFilenames = getBricksFilenames();
+        if (bricksFilenames.size() > 0)
+            return loadBrick(bricksFilenames.get(bricksFilenames.size() - 1));
+        return null;
+    }
 
+    @Override
+    public Brick loadBrick(String filename) {
+        return new Brick();
     }
 
     @Override

@@ -12,5 +12,6 @@ public abstract class Chain
     abstract String buildHash(String guess);
     abstract Brick getPreviousBrick();
     abstract void saveBrick(Brick brick);
+    abstract Brick loadBrick(String filename);
     abstract List<String> getBricksFilenames();
 }
