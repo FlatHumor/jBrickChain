@@ -1,4 +1,3 @@
-package ru.inpleasure.brickchain;
 
 public class Transaction
 {

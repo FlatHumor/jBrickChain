@@ -1,17 +1,26 @@
-package ru.inpleasure.brickchain;
 
+import org.json.*;
+import java.lang.reflect.*;
 public class Brick
 {
+    private int identificator;
     private String headerHash;
     private String previousBrickHash;
     private String bits = "0000";
-    private String filename;
     private int nonce = 0;
     private long timestamp;
     private Transaction transaction;
 
     public Brick() {
         this.timestamp = System.currentTimeMillis();
+    }
+    
+    public int getIdentificator() {
+        return identificator;
+    }
+    
+    public void setIdentificator(int identificator) {
+        this.identificator = identificator;
     }
 
     public String getHeaderHash() {
@@ -36,14 +45,6 @@ public class Brick
 
     public void setBits(String bits) {
         this.bits = bits;
-    }
-
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
     }
 
     public int getNonce() {
@@ -72,5 +73,23 @@ public class Brick
 
     public String getGuess() {
         return transaction.getGuess() + headerHash + Long.toString(timestamp);
+    }
+    
+    @Override
+    public String toString()
+    {
+        JSONObject jObject = new JSONObject();
+        try 
+        {
+            for (Field field : getClass().getFields())
+                jObject.put(field.getName(), field.get(this));
+            return jObject.toString(2);
+        }
+        catch (JSONException e) {
+            return e.getMessage();
+        }
+        catch (IllegalAccessException e) {
+            return e.getMessage();
+        }
     }
 }

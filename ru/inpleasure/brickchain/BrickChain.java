@@ -1,16 +1,23 @@
-package ru.inpleasure.brickchain;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.security.*;
 
 public class BrickChain extends Chain
 {
-    public BrickChain(String chainPath) {
-        this.chainPath = chainPath;
+    public BrickChain(Repository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public void linkRepository(Repository repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    void unlinkRepository() {
+        // TODO: Implement
     }
 
     @Override
@@ -23,50 +30,65 @@ public class BrickChain extends Chain
     }
 
     @Override
-    public Brick calculateNonce(Brick brick) {
+    public void calculateNonce(Brick brick) 
+    {
         int nonce = brick.getNonce();
         while (!checkNonce(brick.getHeaderHash(), nonce, brick.getBits()))
             nonce++;
         brick.setNonce(nonce);
-        return brick;
     }
 
     @Override
-    public List<String> getBricksFilenames() {
-        Pattern brickFilePattern = Pattern.compile("\\d+?\\.brick");
-        File bricksDirectory = new File(chainPath);
-        File[] directoryFiles = bricksDirectory.listFiles();
-        if (directoryFiles == null)
-            return new ArrayList<>();
-        List<Integer> brickNumbers = new ArrayList<>(directoryFiles.length);
-        for (final File fileEntry : directoryFiles)
+    public Brick getPreviousBrick()
+    {
+        final List<Integer> bricksIdentificators = repository.getIdentificators();
+        if (bricksIdentificators == null || bricksIdentificators.size() == 0)
+            return null;
+        Brick previousBrick = repository
+            .loadBrick(bricksIdentificators.get(bricksIdentificators.size() - 1));
+        return previousBrick;
+    }
+
+    @Override
+    public String buildHash(String guess)
+    {
+        try 
         {
-            if (brickFilePattern.matcher(fileEntry.getName()).find()) {
-                String fileNumber = fileEntry.getName().split(".")[0];
-                brickNumbers.add(Integer.valueOf(fileNumber));
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(guess.getBytes());
+            StringBuffer hexString = new StringBuffer();
+
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if (hex.length() == 1)
+                    hexString.append('0');
+                hexString.append(hex);
             }
+            return hexString.toString();
         }
-        Collections.sort(brickNumbers);
-        return brickNumbers.stream()
-                .map(n -> Integer.toString(n) + ".brick")
-                .collect(Collectors.toList());
+        catch (NoSuchAlgorithmException e) {
+            return null;
+        }
     }
-
+    
     @Override
-    public Brick getPreviousBrick() {
-        List<String> bricksFilenames = getBricksFilenames();
-        if (bricksFilenames.size() > 0)
-            return loadBrick(bricksFilenames.get(bricksFilenames.size() - 1));
-        return null;
-    }
-
-    @Override
-    public Brick loadBrick(String filename) {
-        return new Brick();
-    }
-
-    @Override
-    public String buildHash(String guess) {
-        return "";
+    public void addTransaction(Transaction transaction)
+    {
+        int previousBrickNumber = 0;
+        String previousHash = DEFAULT_HASH;
+        Brick previousBrick = getPreviousBrick();
+        if (previousBrick != null)
+        {
+            previousBrickNumber = previousBrick.getIdentificator();
+            previousHash = previousBrick.getHeaderHash();
+        }
+        Brick currentBrick = new Brick();
+        currentBrick.setIdentificator(previousBrickNumber + 1);
+        currentBrick.setPreviousBrickHash(previousHash);
+        currentBrick.setTransaction(transaction);
+        calculateNonce(currentBrick);
+        String headerHash = buildHash(currentBrick.getGuess());
+        currentBrick.setHeaderHash(headerHash);
+        repository.saveBrick(currentBrick);
     }
 }
