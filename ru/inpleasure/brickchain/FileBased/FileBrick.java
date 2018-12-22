@@ -3,6 +3,7 @@ package ru.inpleasure.brickchain.FileBased;
 import org.json.JSONException;
 import org.json.JSONObject;
 import ru.inpleasure.brickchain.Brick;
+import ru.inpleasure.brickchain.Transaction;
 
 import java.lang.reflect.Field;
 
@@ -27,6 +28,12 @@ public class FileBrick extends Brick
             Class<?> brickClass = FileBrick.class.getSuperclass();
             for (Field field : brickClass.getDeclaredFields()) {
                 field.setAccessible(true);
+                if (field.getType() == Transaction.class) {
+                    JSONObject transactionJsonObject = jsonObject.getJSONObject("transaction");
+                    Transaction transaction = FileTransaction.createFromJson(transactionJsonObject);
+                    brick.setTransaction(transaction);
+                    continue;
+                }
                 field.set(brick, jsonObject.get(field.getName()));
             }
             return brick;
@@ -51,7 +58,8 @@ public class FileBrick extends Brick
                 jsonObject.put(field.getName(), field.get(this));
 
             FileTransaction fTransaction = new FileTransaction(transaction);
-            jsonObject.put("transaction", fTransaction.toString());
+            JSONObject transactionJsonObject = new JSONObject(fTransaction.toString());
+            jsonObject.put("transaction", transactionJsonObject);
 
             System.out.println(jsonObject.toString(2));
             return jsonObject.toString(2);
