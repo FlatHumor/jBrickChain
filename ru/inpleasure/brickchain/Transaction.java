@@ -1,11 +1,5 @@
 package ru.inpleasure.brickchain;
 
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.lang.reflect.Field;
-
 public class Transaction
 {
     protected String sender;

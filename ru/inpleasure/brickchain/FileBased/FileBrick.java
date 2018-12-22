@@ -61,7 +61,6 @@ public class FileBrick extends Brick
             JSONObject transactionJsonObject = new JSONObject(fTransaction.toString());
             jsonObject.put("transaction", transactionJsonObject);
 
-            System.out.println(jsonObject.toString(2));
             return jsonObject.toString(2);
         }
         catch (JSONException e) {

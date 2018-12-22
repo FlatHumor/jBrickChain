@@ -18,7 +18,23 @@ public class FileTransaction extends Transaction
 
     public static Transaction createFromJson(JSONObject jsonObject)
     {
-        return new Transaction();
+        try
+        {
+            Transaction transaction = new Transaction();
+            Class<?> transactionClass = FileTransaction.class.getSuperclass();
+            for (Field field : transactionClass.getDeclaredFields()) {
+                field.setAccessible(true);
+                field.set(transaction, jsonObject.get(field.getName()));
+            }
+            return transaction;
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
+        catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -31,7 +47,6 @@ public class FileTransaction extends Transaction
             for (Field field : transactionClass.getDeclaredFields())
                 jObject.put(field.getName(), field.get(this));
 
-            System.out.println(jObject.toString(2));
             return jObject.toString(2);
         }
         catch (JSONException e) {
