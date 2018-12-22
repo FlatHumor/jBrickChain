@@ -1,6 +1,5 @@
+package ru.inpleasure.brickchain;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.security.*;
 
@@ -44,9 +43,8 @@ public class BrickChain extends Chain
         final List<Integer> bricksIdentificators = repository.getIdentificators();
         if (bricksIdentificators == null || bricksIdentificators.size() == 0)
             return null;
-        Brick previousBrick = repository
+        return repository
             .loadBrick(bricksIdentificators.get(bricksIdentificators.size() - 1));
-        return previousBrick;
     }
 
     @Override
@@ -79,9 +77,8 @@ public class BrickChain extends Chain
         Brick previousBrick = getPreviousBrick();
         if (previousBrick != null)
         {
-            previousBrickNumber = previousBrick.getIdentificator();
+            previousBrickNumber = previousBrick.getIdentificator() + 1;
             previousHash = previousBrick.getHeaderHash();
-            previousBrickNumber++;
         }
         Brick currentBrick = new Brick();
         currentBrick.setIdentificator(previousBrickNumber);

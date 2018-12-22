@@ -1,10 +1,17 @@
+package ru.inpleasure.brickchain;
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Field;
 
 public class Transaction
 {
-    private String sender;
-    private String receiver;
-    private String content;
-    private long timestamp;
+    protected String sender;
+    protected String receiver;
+    protected String content;
+    protected long timestamp;
 
     public Transaction(String sender, String receiver, String content)
     {

@@ -1,16 +1,14 @@
-
-import org.json.*;
-import java.lang.reflect.*;
+package ru.inpleasure.brickchain;
 
 public class Brick
 {
-    private int identificator;
-    private String headerHash;
-    private String previousBrickHash;
-    private String bits = "0000";
-    private int nonce = 0;
-    private long timestamp;
-    private Transaction transaction;
+    protected int identificator;
+    protected String headerHash;
+    protected String previousBrickHash;
+    protected String bits = "0000";
+    protected int nonce = 0;
+    protected long timestamp;
+    protected Transaction transaction;
 
     public Brick() {
         this.timestamp = System.currentTimeMillis();
@@ -74,28 +72,5 @@ public class Brick
 
     public String getGuess() {
         return transaction.getGuess() + headerHash + Long.toString(timestamp);
-    }
-    
-    @Override
-    public String toString()
-    {
-        JSONObject jObject = new JSONObject();
-        try 
-        {
-            for (Field field : getClass().getFields())
-                jObject.put(field.getName(), field.get(this));
-                
-            for (Field field : transaction.getClass().getFields())
-            
-                jObject.put(field.getName(), field.get(transaction));
-            System.out.println(jObject.toString(2));
-            return jObject.toString(2);
-        }
-        catch (JSONException e) {
-            return e.getMessage();
-        }
-        catch (IllegalAccessException e) {
-            return e.getMessage();
-        }
     }
 }

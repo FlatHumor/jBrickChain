@@ -1,8 +1,11 @@
+package ru.inpleasure.brickchain.FileBased;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,11 +13,15 @@ import java.util.regex.Pattern;
 import java.lang.reflect.*;
 import org.json.JSONObject;
 import org.json.JSONException;
+import ru.inpleasure.brickchain.Brick;
+import ru.inpleasure.brickchain.Repository;
+import ru.inpleasure.brickchain.Transaction;
 
 public class FileRepository implements Repository
 {
     private String directory;
     private String extension;
+    private WeakReference<List<Brick>> brickReference;
     
     public FileRepository(String directory) 
     {
@@ -45,8 +52,9 @@ public class FileRepository implements Repository
         }
         try
         {
+            FileBrick fBrick = new FileBrick(brick);
             FileWriter writer = new FileWriter(brickFile);
-            writer.write(brick.toString());
+            writer.write(fBrick.toString());
             writer.flush();
             writer.close();
         }
@@ -77,26 +85,13 @@ public class FileRepository implements Repository
             bufferedReader.close();
             fileReader.close();
                 
-            JSONObject jObject = new JSONObject(brickBuilder.toString());
-            Transaction transaction = new Transaction();
-            Brick brick = new Brick();
-            
-            for (Field field : transaction.getClass().getFields())
-                field.set(transaction, jObject.get(field.getName()));
-                
-            for (Field field : brick.getClass().getFields())
-                field.set(brick, jObject.get(field.getName()));
-                
-            brick.setTransaction(transaction);
-            return brick;
+            JSONObject jsonObject = new JSONObject(brickBuilder.toString());
+            return FileBrick.createFromJson(jsonObject);
         }
         catch (IOException e) {
             e.printStackTrace();
         }
         catch (JSONException e) {
-            e.printStackTrace();
-        }
-        catch (IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;

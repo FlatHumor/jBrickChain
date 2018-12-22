@@ -1,3 +1,4 @@
+package ru.inpleasure.brickchain;
 
 import java.util.List;
 
