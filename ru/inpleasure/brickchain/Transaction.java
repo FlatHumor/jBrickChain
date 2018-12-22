@@ -13,6 +13,8 @@ public class Transaction
         this.content = content;
         this.timestamp = System.currentTimeMillis();
     }
+    
+    public Transaction() { }
 
     public String getSender() {
         return sender;

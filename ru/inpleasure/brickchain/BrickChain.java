@@ -81,9 +81,10 @@ public class BrickChain extends Chain
         {
             previousBrickNumber = previousBrick.getIdentificator();
             previousHash = previousBrick.getHeaderHash();
+            previousBrickNumber++;
         }
         Brick currentBrick = new Brick();
-        currentBrick.setIdentificator(previousBrickNumber + 1);
+        currentBrick.setIdentificator(previousBrickNumber);
         currentBrick.setPreviousBrickHash(previousHash);
         currentBrick.setTransaction(transaction);
         calculateNonce(currentBrick);

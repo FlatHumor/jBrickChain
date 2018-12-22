@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Pattern;
+import java.lang.reflect.*;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 public class FileRepository implements Repository
 {
@@ -21,9 +24,17 @@ public class FileRepository implements Repository
         this.extension = ".brick";
     }
     
+    private void initChainDirectory()
+    {
+        File chainDirectory = new File(directory);
+        if (!chainDirectory.exists())
+            chainDirectory.mkdirs();
+    }
+    
     @Override
     public void saveBrick(Brick brick) 
     {
+        initChainDirectory();
         String brickFilename = directory
             .concat(Integer.toString(brick.getIdentificator()))
             .concat(extension);
@@ -36,6 +47,8 @@ public class FileRepository implements Repository
         {
             FileWriter writer = new FileWriter(brickFile);
             writer.write(brick.toString());
+            writer.flush();
+            writer.close();
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -61,11 +74,30 @@ public class FileRepository implements Repository
             String line;
             while ((line = bufferedReader.readLine()) != null)
                 brickBuilder.append(line);
-            brickBuilder.toString();
+            bufferedReader.close();
+            fileReader.close();
+                
+            JSONObject jObject = new JSONObject(brickBuilder.toString());
+            Transaction transaction = new Transaction();
+            Brick brick = new Brick();
+            
+            for (Field field : transaction.getClass().getFields())
+                field.set(transaction, jObject.get(field.getName()));
+                
+            for (Field field : brick.getClass().getFields())
+                field.set(brick, jObject.get(field.getName()));
+                
+            brick.setTransaction(transaction);
+            return brick;
         }
         catch (IOException e) {
             e.printStackTrace();
-            return null;
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
+        catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
         return null;
     }

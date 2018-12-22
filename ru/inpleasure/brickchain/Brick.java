@@ -1,6 +1,7 @@
 
 import org.json.*;
 import java.lang.reflect.*;
+
 public class Brick
 {
     private int identificator;
@@ -83,6 +84,11 @@ public class Brick
         {
             for (Field field : getClass().getFields())
                 jObject.put(field.getName(), field.get(this));
+                
+            for (Field field : transaction.getClass().getFields())
+            
+                jObject.put(field.getName(), field.get(transaction));
+            System.out.println(jObject.toString(2));
             return jObject.toString(2);
         }
         catch (JSONException e) {
