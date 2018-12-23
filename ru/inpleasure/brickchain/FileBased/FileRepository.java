@@ -10,18 +10,16 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Pattern;
-import java.lang.reflect.*;
 import org.json.JSONObject;
 import org.json.JSONException;
 import ru.inpleasure.brickchain.Brick;
 import ru.inpleasure.brickchain.Repository;
-import ru.inpleasure.brickchain.Transaction;
 
 public class FileRepository implements Repository
 {
     private String directory;
     private String extension;
-    private WeakReference<List<Brick>> brickReference;
+    private WeakReference<List<Brick>> bricksReference;
     
     public FileRepository(String directory) 
     {
@@ -29,6 +27,7 @@ public class FileRepository implements Repository
         if (!directory.endsWith(File.separator))
             this.directory += File.separator;
         this.extension = ".brick";
+        bricksReference = new WeakReference<>(new ArrayList<>());
     }
     
     private void initChainDirectory()
@@ -96,29 +95,56 @@ public class FileRepository implements Repository
         }
         return null;
     }
-    
-    @Override
-    public List<Integer> getIdentificators() {
+
+    private List<File> getBricksFiles()
+    {
         Pattern filenamePattern = Pattern.compile("\\d+?" + extension);
         File bricksDirectory = new File(directory);
         File[] brickFiles = bricksDirectory.listFiles();
-        List<Integer> brickNumbers = new ArrayList<>();
-        if (brickFiles == null || brickFiles.length == 0)
-            return brickNumbers;
+        List<File> brickFilesList = new ArrayList<>();
+        if (brickFiles == null)
+            return brickFilesList;
         for (final File brickFile : brickFiles)
         {
             if (filenamePattern.matcher(brickFile.getName()).find())
-            {
-                String brickNumber = brickFile.getName().split("\\.")[0];
-                brickNumbers.add(Integer.valueOf(brickNumber));
-            }
+                brickFilesList.add(brickFile);
+        }
+        return brickFilesList;
+    }
+
+    private int parseIdentificator(String filename) {
+        String brickNumber = filename.split("\\.")[0];
+        return Integer.valueOf(brickNumber);
+    }
+    
+    @Override
+    public List<Integer> getIdentificators() {
+        List<File> brickFiles = getBricksFiles();
+        List<Integer> brickNumbers = new ArrayList<>();
+        if (brickFiles == null || brickFiles.size() == 0)
+            return brickNumbers;
+        for (final File brickFile : brickFiles) {
+            int brickIdentificator = parseIdentificator(brickFile.getName());
+            brickNumbers.add(brickIdentificator);
         }
         Collections.sort(brickNumbers);
         return brickNumbers;
     }
     
     @Override
-    public List<Brick> getBricks() {
-        return null;
+    public List<Brick> getBricks()
+    {
+        if (bricksReference.get() == null)
+        {
+            List<Brick> bricks = new ArrayList<>();
+            List<Integer> bricksIdentificators = getIdentificators();
+            for (int identificator : bricksIdentificators)
+            {
+                Brick brick = loadBrick(identificator);
+                bricks.add(brick);
+            }
+            bricksReference = new WeakReference<>(bricks);
+        }
+        return bricksReference.get();
     }
 }

@@ -1,7 +1,8 @@
 package ru.inpleasure.brickchain;
 
 import java.util.List;
-import java.security.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class BrickChain extends Chain
 {
@@ -88,5 +89,50 @@ public class BrickChain extends Chain
         String headerHash = buildHash(currentBrick.getGuess());
         currentBrick.setHeaderHash(headerHash);
         repository.saveBrick(currentBrick);
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        List<Integer> bricksIdentificators = repository.getIdentificators();
+        if (bricksIdentificators.size() == 0)
+            return true;
+        String previousHash = DEFAULT_HASH;
+        String transactionGuess;
+        String brickGuess;
+        String brickHash;
+        Brick brick;
+        for (final int brickIdentificator : bricksIdentificators)
+        {
+            brick = repository.loadBrick(brickIdentificator);
+            if (brickIdentificator == 0) {
+                previousHash = brick.getHeaderHash();
+                continue;
+            }
+            brickGuess = brick.getGuess();
+            brickHash = buildHash(brickGuess);
+
+            if (!brick.getHeaderHash().equals(brickHash)) {
+                System.out.println("VALIDATION FAILED ON HASH RECALCULATION");
+                System.out.println("EXISTING HASH:\t\t" + brick.getHeaderHash());
+                System.out.println("RECALCULATED HASH:\\t" + brickHash);
+                return false;
+            }
+
+            if (brick.getPreviousBrickHash().equals(previousHash)) {
+                System.out.println("VALIDATION FAILED ON LINK CHECKING");
+                System.out.println("PREVIOUS HASH:\t\t" + previousHash);
+                System.out.println("BRICK PREVIOUS HASH:\t" + brick.getPreviousBrickHash());
+                return false;
+            }
+
+            if (!checkNonce(brick.getHeaderHash(), brick.getNonce(), brick.getBits())) {
+                System.out.println("VALIDATION FAILED ON LINK CHECKING");
+                return false;
+            }
+
+            previousHash = brick.getHeaderHash();
+        }
+        return true;
     }
 }

@@ -14,4 +14,5 @@ public abstract class Chain
     abstract String buildHash(String guess);
     abstract Brick getPreviousBrick();
     abstract void addTransaction(Transaction transaction);
+    abstract boolean isValid();
 }
